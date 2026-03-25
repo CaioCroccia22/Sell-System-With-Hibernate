@@ -9,8 +9,8 @@ public class SingletonMap {
     private static SingletonMap singletonMap;
 
     /**
-     * Contém todos os registros da aplicação.
-     * Simula o banco de dados
+     * Contains all application records.
+     * Simulates the database
      */
     protected Map<Class, Map<?, ?>> map;
 
@@ -19,7 +19,7 @@ public class SingletonMap {
     }
 
     /**
-     * Método que garante o retorno de apenas uma instância desse objeto
+     * Method that ensures only one instance of this object is returned
      *
      * @return SingletonMap
      */
