@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import br.com.ccroccia.domain.Client;
 import br.com.ccrocia.dao.generic.jdbc.ConnectionFactory;
@@ -166,6 +168,46 @@ public class ClientDAO implements IClientDao {
 		}
 		
 		
+	}
+
+
+	@Override
+	public List<Client> getAll() throws Exception {
+		Connection connection = null;
+		PreparedStatement stm = null;
+		ResultSet rs		  = null;
+		Client client		  = null;
+		List<Client> list     = new ArrayList<>();
+	    
+		try {
+			connection = ConnectionFactory.getConnection();
+			String sql = getSelectAllSql();
+			stm 	   = connection.prepareStatement(sql);
+			rs 		   = stm.executeQuery();
+			while(rs.next()) {
+				client  = new Client();
+				Long id = rs.getLong("cd_cliente");
+				String name = rs.getString("nm_cliente");
+				Long cpf 	= rs.getLong("cpf");
+				client.setId(id);
+				client.setCpf(cpf);
+				client.setName(name);
+				list.add(client);
+				
+			}
+		} catch (Exception e) {
+			throw e;
+		} finally {
+			closeConnection(connection, stm, rs);
+		}
+		return list;
+	}
+
+
+	private String getSelectAllSql() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("SELECT * FROM CLIENTE");
+		return sb.toString();
 	}
 
 }
