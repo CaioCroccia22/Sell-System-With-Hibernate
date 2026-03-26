@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.sql.*;
 import java.util.Collection;
 import java.util.HashMap;
@@ -32,11 +33,11 @@ public abstract class GenericDAO<T extends Persistent, E extends Serializable> i
     
     protected abstract String getQueryUpdate();
     
-    protected abstract void setParametersInsert(PreparedStatement stmInsert, T entity);
+    protected abstract void setParametersInsert(PreparedStatement stmInsert, E value) throws SQLException;
     
-    protected abstract void setParametersDelete(PreparedStatement stmDelete, T entity);
+    protected abstract void setParametersDelete(PreparedStatement stmDelete, E value) throws SQLException ;
     
-    protected abstract void setParametersUpdate(PreparedStatement stmUpdate, T entity);
+    protected abstract void setParametersUpdate(PreparedStatement stmUpdate, E value) throws SQLException;
     
     protected abstract void setParametersSelect(PreparedStatement stmUpdate, T entity);
     
@@ -68,15 +69,15 @@ public abstract class GenericDAO<T extends Persistent, E extends Serializable> i
 		return false;
     }
     
-    public T find(E value) {
+    public T find(E value) throws Exception {
        	Connection connection = null;
     	PreparedStatement stm = null;
     	try {
     		connection = getConnection();
-    		stm		   = connection.prepareStatement("SELECT * FROM" 
-    		+ getTableName() + "WHERE" + getColumnName() + "= ?");
+    		stm		   = connection.prepareStatement("SELECT * FROM " 
+    		+ getTableName() + " WHERE " + getColumnName().columnName() + " = ? ");
     		ResultSet rs = stm.executeQuery();
-    		if(!rs.wasNull()) {
+    		if(rs.next()) {
     			T entity = getTypeClass().getConstructor().newInstance();
     			Field[] fields = entity.getClass().getFields();
     			for(Field f:fields) {
@@ -87,8 +88,9 @@ public abstract class GenericDAO<T extends Persistent, E extends Serializable> i
     				try {
     					//The method getMethod allow us to find methods with String, that
     					// represents method name and type parameters
-    					Method method = entity.getClass().getMethod(setMethod, type)
+    					Method method = entity.getClass().getMethod(setMethod, type);
     					setValueByType(entity, method, type, rs, columnName);
+    					return entity;
     				} catch(NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
     					throw new Exception("ERRO CONSULTANDO OBJETO ", e);
 	                } catch (KeyTypeNotFoundException e) {
@@ -97,19 +99,89 @@ public abstract class GenericDAO<T extends Persistent, E extends Serializable> i
     				
     			}
     		}
-    	}
+    	} catch(Exception e) {
+    		throw new Exception("Erro ao se conectar com o banco ", e);
+    	} finally {
+			closeConnection(connection, stm, null);
+		}
 		return null;
     	
     }
+    
+    public Boolean delete(E value) throws Exception {
+    	Connection connection = null;
+    	PreparedStatement stm = null;
+    	try {
+    		connection = getConnection();
+    		stm = connection.prepareStatement(getQueryDelete() + " WHERE " 
+    		+ getColumnName().columnName() + " = " + " ? ");
+    		setParametersDelete(stm, value);
+    		if(stm.executeUpdate() > 0) {
+    			return true;
+    		}
+    		return false;
+    	} catch(SQLException e) {
+			throw new Exception("Erro ao excluir", e);
+		} finally {
+			closeConnection(connection, stm, null);
+		}
+    }
+    
+    
+    public Boolean update(E value) throws Exception {
+    	Connection connection = null;
+    	PreparedStatement stm = null;
+    	try {
+    		connection = getConnection();
+    		stm = connection.prepareStatement(getQueryUpdate() + " WHERE " 
+    		+ getColumnName().columnName() + " = " + " ? ");
+    		setParametersUpdate(stm, value);
+    		if(stm.executeUpdate() > 0) {
+    			return true;
+    		}
+    		return false;
+    	} catch(SQLException e) {
+			throw new Exception("Erro ao atualizar", e);
+		} finally {
+			closeConnection(connection, stm, null);
+		}
+    }
+    
+    
+    private void setValueByType(T entity, Method method, Class<?> fieldClass, ResultSet rs, String fieldName)
+            throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, SQLException, Exception {
+
+        if (fieldClass.equals(Integer.class)) {
+            Integer val = rs.getInt(fieldName);
+            method.invoke(entity, val);
+        } else if (fieldClass.equals(Long.class)) {
+            Long val = rs.getLong(fieldName);
+            method.invoke(entity, val);
+        } else if (fieldClass.equals(Double.class)) {
+            Double val = rs.getDouble(fieldName);
+            method.invoke(entity, val);
+        } else if (fieldClass.equals(Short.class)) {
+            Short val = rs.getShort(fieldName);
+            method.invoke(entity, val);
+        } else if (fieldClass.equals(BigDecimal.class)) {
+            BigDecimal val = rs.getBigDecimal(fieldName);
+            method.invoke(entity, val);
+        } else if (fieldClass.equals(String.class)) {
+            String val = rs.getString(fieldName);
+            method.invoke(entity, val);
+        } else {
+            throw new Exception("UNKNOWN CLASS TYPE: " + fieldClass);
+        }
+    }
 
     //Get the column that has annotation of pk
-	private String getColumnName() {
+	private Column getColumnName() {
 		Class<T> entity = getTypeClass();
 		Field[] fields = entity.getFields();
 		for(Field f: fields) {
 			if(f.getAnnotation(KeyType.class) != null) {
 				Column column = entity.getClass().getAnnotation(Column.class);	
-				return column.columnName();
+				return column;
 			}
 		}
 		return null;

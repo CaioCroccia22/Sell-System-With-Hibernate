@@ -15,13 +15,13 @@ public interface IGenericDAO <T extends Persistent, E extends Serializable> {
     public Boolean register(T entity) throws KeyTypeNotFoundException, Exception;
 
 
-    public Integer delete(E value);
+    public Boolean delete(E value) throws Exception;
 
 
     public Integer update(T entity) throws KeyTypeNotFoundException;
 
 
-    public T find(E value);
+    public T find(E value) throws Exception;
 
 
     public Collection<T> findAll();

@@ -15,6 +15,7 @@ import br.com.ccrocia.dao.generic.jdbc.ConnectionFactory;
 
 public class ClientDAO extends GenericDAO<Client, Long> implements IGenericDAO<Client,Long> {
 
+	/// ============= insert =========================
 	@Override
 	protected String getQueryInsert() {
 		StringBuilder sb = new StringBuilder();
@@ -24,39 +25,29 @@ public class ClientDAO extends GenericDAO<Client, Long> implements IGenericDAO<C
 		return sb.toString();
 	}
 	
-	
-	
-	
 	@Override
-	public Integer Register(Client client) throws Exception {
-		Connection connection = null;
-		PreparedStatement stm = null;
-		try {
-			connection = ConnectionFactory.getConnection();
-			String sql = getSqlInsert();
-			stm = connection.prepareStatement(sql);
-			getInsertData(stm, client);
-			return stm.executeUpdate();
-		} catch(Exception e) {
-			throw e;
-		} finally {
-			closeConnection(connection, stm, null);
-		}
+	protected void setParametersInsert(PreparedStatement stm, Long value) throws SQLException {
+		stm.setLong(1, value);
+		/// Tem que preencher 
 	}
-
-
-	private String getSqlInsert() {
+	
+	///=============== delete =============================
+	@Override
+	protected String getQueryDelete() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("INSERT INTO CLIENTE (cd_cliente, cpf,nm_cliente) ");
-		sb.append("VALUES (nextval('sq_cliente'), ?,?)");
+		sb.append("DELETE FROM CLIENTE ");
 		return sb.toString();
 	}
 	
-	private void getInsertData(PreparedStatement stm, Client client) throws SQLException {
-		stm.setLong(1, client.getCpf());
-		stm.setString(2, client.getName());
-	
+	@Override
+	protected void setParametersDelete(PreparedStatement stm, Long value) throws SQLException {
+		stm.setLong(1, value);
 	}
+	
+	
+	/// ===========================================================
+	
+
 
 	@Override
 	public Client findByCPF(Long cpf) throws Exception {
