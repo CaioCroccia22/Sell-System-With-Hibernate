@@ -1,5 +1,5 @@
-/bin/
+01:48/bin/
 .classpath
 .project
-.settings
-
+.settings/
+src/main/java/br/com/ccrocia/dao/generic/jdbc/ConnectionFactory.java
