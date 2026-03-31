@@ -29,11 +29,21 @@ public class ProductQuantity{
 		foreignKey = @ForeignKey(name = "fk_product_total_sale"), 
 		referencedColumnName = "id", nullable = false
 	)
-	private Sale venda;
+	private Sale sale;
 	
 	public ProductQuantity() {
 		this.quantity = 0;
 		this.total = BigDecimal.ZERO;
+	}
+	
+	public void add(Integer quantity) {
+		this.quantity += quantity;
+		this.total = BigDecimal.valueOf(this.quantity).multiply(BigDecimal.valueOf(product.getPrice()));
+	}
+	
+	public void remove(Integer quantity) {
+		this.quantity -= quantity;
+		this.total = BigDecimal.valueOf(this.quantity).multiply(BigDecimal.valueOf(product.getPrice()));
 	}
 
 	public Long getId() {
@@ -68,12 +78,12 @@ public class ProductQuantity{
 		this.total = total;
 	}
 
-	public Sale getVenda() {
-		return venda;
+	public Sale getSale() {
+		return sale;
 	}
 
-	public void setVenda(Sale venda) {
-		this.venda = venda;
+	public void setSale(Sale sale) {
+		this.sale = sale;
 	}
 	
 	

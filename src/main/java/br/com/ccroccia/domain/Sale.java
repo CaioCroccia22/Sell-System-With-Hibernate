@@ -2,6 +2,7 @@ package br.com.ccroccia.domain;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -29,7 +30,7 @@ public class Sale implements Persistent{
 
 	@Id
 	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="seq_sale")
-	@SequenceGenerator(name="seq_sale", sequenceName="seq_vale", initialValue = 1, allocationSize = 1)
+	@SequenceGenerator(name="seq_sale", sequenceName="seq_sale", initialValue = 1, allocationSize = 1)
 	private Long id;
 	
 	@Column(name = "code", nullable = false, unique = false)
@@ -44,11 +45,8 @@ public class Sale implements Persistent{
 	
 	
 	
-	@ManyToMany
-	@JoinTable(name = "produts_sale",
-	joinColumns = @JoinColumn(name = "sale_id"),
-	inverseJoinColumns = @JoinColumn(name = "products_id"))
-	private List<Product> products;
+	@OneToMany(mappedBy = "sale", cascade = CascadeType.ALL)
+	private List<ProductQuantity> products;
 	
 	@Column(name = "total", nullable = false)
 	private BigDecimal total;
@@ -61,7 +59,7 @@ public class Sale implements Persistent{
 	private Status status;
 	
 	public Sale() {
-		products = new HashSet<>();
+		products = new ArrayList<>();
 	}
 
 	public Long getId() {
@@ -88,11 +86,11 @@ public class Sale implements Persistent{
 		this.client = client;
 	}
 
-	public List<Product> getProducts() {
+	public List<ProductQuantity> getProducts() {
 		return products;
 	}
 
-	public void setProducts(List<Product> products) {
+	public void setProducts(List<ProductQuantity> products) {
 		this.products = products;
 	}
 
@@ -147,7 +145,7 @@ public class Sale implements Persistent{
 	public void removeProduct(Product product, Integer quantity) {
 	    validateStatus();
 	    Optional<ProductQuantity> op =
-	            products.stream().filter(filter -> filter.getProduct().getCode().equals(product.getCode())).findAny();
+	            products.stream().filter(filter -> filter.getProduct().getId().equals(product.getId())).findAny();
 
 	    if (op.isPresent()) {
 	        ProductQuantity productQty = op.get();
@@ -164,7 +162,7 @@ public class Sale implements Persistent{
 	public void removeAllProducts() {
 	    validateStatus();
 	    products.clear();
-	    totalValue = BigDecimal.ZERO;
+	    total = BigDecimal.ZERO;
 	}
 
 	public Integer getTotalProductQuantity() {
@@ -178,9 +176,9 @@ public class Sale implements Persistent{
 	    //validateStatus();
 	    BigDecimal totalValue = BigDecimal.ZERO;
 	    for (ProductQuantity prod : this.products) {
-	        totalValue = totalValue.add(prod.getTotalValue());
+	        totalValue = totalValue.add(prod.getTotal());
 	    }
-	    this.totalValue = totalValue;
+	    this.total = totalValue;
 	}
 	
 	
