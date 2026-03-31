@@ -14,19 +14,24 @@ import java.util.Random;
 import org.junit.After;
 import org.junit.jupiter.api.*;
 
+import br.com.ccroccia.dao.ClientDAO;
+import br.com.ccroccia.dao.IClientDao;
 import br.com.ccroccia.dao.SaleDAO;
 import br.com.ccroccia.dao.ISaleDao;
+import br.com.ccroccia.domain.Client;
 import br.com.ccroccia.domain.Sale;
 
 public class SaleTest {
 
 
 	private ISaleDao saleDAO;
+	private IClientDao clientDAO;
 
 	private Random rd;
 
 	public SaleTest() {
 		this.saleDAO = new SaleDAO();
+		this.clientDAO = new ClientDAO();
 		rd = new Random();
 	}
 
@@ -45,7 +50,8 @@ public class SaleTest {
 
 	@Test
 	public void FindSale() throws Exception{
-		Sale sale = createSale();
+		Client client = createAndRegisterClient();
+		Sale sale = createSale(client);
 		saleDAO.register(sale);
 
 		Sale getSucessSaleRegister = saleDAO.find(sale.getId());
@@ -54,7 +60,8 @@ public class SaleTest {
 
 	@Test
 	public void saveSale() throws Exception{
-		Sale sale = createSale();
+		Client client = createAndRegisterClient();
+		Sale sale = createSale(client);
 
 
 		Sale getSucessSaleRegister = saleDAO.register(sale);
@@ -71,7 +78,8 @@ public class SaleTest {
 
 	@Test
 	public void removeSale() {
-		Sale sale = createSale();
+		Client client = createAndRegisterClient();
+		Sale sale = createSale(client);
 
 		Sale getSucessSaleRegister = saleDAO.register(sale);
 		assertNotNull(getSucessSaleRegister);
@@ -79,7 +87,7 @@ public class SaleTest {
 		Sale getSale = saleDAO.find(sale.getId());
 		assertNotNull(getSale);
 
-		saleDAO.delete(null);
+		saleDAO.delete(getSucessSaleRegister.getId());
 
 		getSale = saleDAO.find(sale.getId());
 		assertNull(getSale);
@@ -87,7 +95,8 @@ public class SaleTest {
 
 	@Test
 	public void updateSale() {
-		Sale sale = createSale();
+		Client client = createAndRegisterClient();
+		Sale sale = createSale(client);
 
 		Sale getSucessSaleRegister = saleDAO.register(sale);
 		assertNotNull(getSucessSaleRegister);
@@ -109,12 +118,13 @@ public class SaleTest {
 
 
 	public void getAllSales() {
-		Sale sale = createSale();
+		Client client = createAndRegisterClient();
+		Sale sale = createSale(client);
 
 		Sale getSucessSaleRegister = saleDAO.register(sale);
 		assertNotNull(getSucessSaleRegister);
 
-		Sale sale1 = createSale();
+		Sale sale1 = createSale(client);
 		Sale getSucessSaleRegister1 = saleDAO.register(sale1);
 		assertNotNull(getSucessSaleRegister1);
 
@@ -124,9 +134,23 @@ public class SaleTest {
 		assertTrue(list.size() == 2);
 	}
 
-	private Sale createSale() {
+	private Client createAndRegisterClient() {
+		Client client = new Client();
+		client.setCpf(rd.nextLong());
+		client.setName("Cliente Teste");
+		client.setAge("30");
+		client.setCity("Santos");
+		client.setAddress("End");
+		client.setState("SP");
+		client.setNumber(10);
+		client.setPhone(1199999999L);
+		return clientDAO.register(client);
+	}
+
+	private Sale createSale(Client client) {
 		Sale sale = new Sale();
 		sale.setCode("SALE-" + rd.nextInt(1000));
+		sale.setClient(client);
 		sale.setTotal(BigDecimal.valueOf(rd.nextDouble() * 1000));
 		sale.setDate(Instant.now());
 		sale.setStatus(Sale.Status.Requested);

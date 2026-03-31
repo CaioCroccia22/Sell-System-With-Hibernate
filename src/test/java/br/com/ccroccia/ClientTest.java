@@ -129,6 +129,7 @@ public class ClientTest {
 		Client client = new Client();
 		client.setCpf(rd.nextLong());
 		client.setName("Caio Croccia");
+		client.setAge("25");
 		client.setCity("Santos");
 		client.setAddress("End");
 		client.setState("SP");
