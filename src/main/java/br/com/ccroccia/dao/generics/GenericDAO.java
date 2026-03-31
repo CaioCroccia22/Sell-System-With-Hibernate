@@ -113,7 +113,7 @@ public class GenericDAO<T extends Persistent, E extends Serializable> implements
     
     
     public List<T> findAll(){
-    	EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("myPersistenceUnit");
+    	EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("MyPersistence");
 		EntityManager entityManager = entityManagerFactory.createEntityManager();
 		
 		entityManager.getTransaction().begin();
