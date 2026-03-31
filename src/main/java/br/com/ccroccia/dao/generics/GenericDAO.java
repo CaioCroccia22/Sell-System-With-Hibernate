@@ -118,7 +118,7 @@ public class GenericDAO<T extends Persistent, E extends Serializable> implements
 		
 		entityManager.getTransaction().begin();
 		List<T> list =
-				entityManager.createQuery("SELECT * FROM PRODUCT", this.persistenceClass).getResultList();
+				entityManager.createQuery("SELECT L FROM " + this.persistenceClass.getSimpleName(), this.persistenceClass).getResultList();
 		entityManager.getTransaction().commit();
 		 
 		entityManager.close();
