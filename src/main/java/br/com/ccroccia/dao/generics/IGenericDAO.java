@@ -12,17 +12,17 @@ import java.util.Collection;
 public interface IGenericDAO <T extends Persistent, E extends Serializable> {
 
 
-    public Boolean register(T entity) throws KeyTypeNotFoundException, Exception;
+    public T register(T entity);
 
 
-    public Boolean delete(E value) throws Exception;
+    public void delete(E value);
 
 
-    public Boolean update(E value) throws KeyTypeNotFoundException, Exception;
+    public T update(T entity);
 
 
-    public T find(E value) throws Exception;
+    public T find(E value);
 
 
-    public Collection<T> findAll() throws Exception;
+    public Collection<T> findAll();
 }

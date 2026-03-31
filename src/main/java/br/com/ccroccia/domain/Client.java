@@ -1,32 +1,46 @@
 package br.com.ccroccia.domain;
 
 
-import annotation.*;
+import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Table;
+
 
 import br.com.ccroccia.dao.Persistent;
 
-@Table(tableName = "Cliente")
+@Entity
+@Table(name = "Client")
 public class Client implements Persistent{
 
 	
-	@Column(columnName = "cd_client", method = "setId")
+	@Id
+	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="seq_client")
+	@SequenceGenerator(name="seq_client", sequenceName="seq_client", initialValue = 1, allocationSize = 1)
 	private Long id;
-	@KeyType("getCpf")
-	@Column(columnName = "cd_cpf", method = "setCpf")
+	
+	
+	@Column(name = "cd_cpf", length = 11, nullable = false, unique = true)
 	private Long cpf;
-	@Column(columnName = "nm_client", method = "setName")
+	
+	@Column(name = "nm_client", length = 30, nullable = false)
 	private String name;
-	@Column(columnName = "nr_age", method = "setAge")
+	
+	@Column(name = "nr_age", length = 2, nullable = false)
 	private String age;
-	@Column(columnName = "nr_phone", method = "setPhone")
+	
+	@Column(name = "nr_phone", length = 12, nullable = false)
 	private Long phone;
-	@Column(columnName = "ds_address", method = "setAddress")
+	
+	@Column(name = "ds_address", length = 20, nullable = false)
 	private String address;
-	@Column(columnName = "nr_adress_number", method = "setNumber")
+	
+	@Column(name = "nr_adress_number", length = 5, nullable = false)
 	private Integer number;
-	@Column(columnName = "ds_city", method = "setCity")
+	
+	@Column(name = "ds_city", length = 30, nullable = false)
 	private String city;
-	@Column(columnName = "ds_state", method = "setState")
+	
+	@Column(name = "ds_state", length = 2, nullable = false)
 	private String state;
 
 

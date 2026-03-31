@@ -1,6 +1,16 @@
 package br.com.ccroccia;
 
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.util.Collection;
+import java.util.Random;
+
+import org.junit.After;
 import org.junit.jupiter.api.*;
 
 import br.com.ccroccia.dao.ClientDAO;
@@ -12,108 +22,124 @@ public class ClientTest {
 	
 	private IClientDao clientDAO;
 	
+	private Random rd;
+	
+	public ClientTest() {
+		this.clientDAO = new ClientDAO();
+		rd = new Random();
+	}
+	
+	@After
+	public void end() throws Exception {
+		Collection<Client> list = clientDAO.findAll();
+		list.forEach(cli -> {
+			try {
+				clientDAO.delete(cli.getId());
+			} catch (Exception e) {
+				
+				e.printStackTrace();
+			}
+		});
+	}
 	
 	@Test
-	public void saveTest() throws Exception {
-		clientDAO = new ClientDAO();
+	public void FindClient() throws Exception{
+		Client client = createClient();
+		clientDAO.register(client);
+		
+		Client getSucessClientRegister = clientDAO.find(client.getId());
+		assertNotNull(getSucessClientRegister);
+	}
+	
+	@Test
+	public void saveClient() throws Exception{
+		Client client = createClient();
+		
 
+		Client getSucessClientRegister = clientDAO.register(client);
+		assertNotNull(getSucessClientRegister);
+		
+		Client getClient = clientDAO.find(client.getId());
+		assertNotNull(getClient);
+		
+		clientDAO.delete(getSucessClientRegister.getId());
+		
+		
+		
+	}
+	
+	@Test
+	public void removeClient() {
+		Client client = createClient();
+		
+		/// Aqui vai ter que trocar o retorno do metodo para um tipo cliente
+		Client getSucessClientRegister = clientDAO.register(client);
+		assertNotNull(getSucessClientRegister);
+		
+		Client getClient = clientDAO.find(client.getId());
+		assertNotNull(getClient);
+		
+		clientDAO.delete(null);
+		
+		getClient = clientDAO.find(client.getId());
+		assertNull(getClient);
+	}
+	
+	@Test
+	public void updateClient() {
+		Client client = createClient();
+		
+		/// Aqui vai ter que trocar o retorno do metodo para um tipo cliente
+		Client getSucessClientRegister = clientDAO.register(client);
+		assertNotNull(getSucessClientRegister);
+		
+		Client getClient = clientDAO.find(client.getId());
+		assertNotNull(getClient);
+		
+		getClient.setName("Fulano 123");
+		clientDAO.update(getClient);
+		
+		Client updateClient = clientDAO.find(getClient.getId());
+		assertNotNull(updateClient);
+		assertEquals("Fulano 123", updateClient.getName());
+		
+		
+		clientDAO.delete(client.getId());
+		
+	}
+	
+	
+	public void getAllClients() {
+		Client client = createClient();
+		
+		Client getSucessClientRegister = clientDAO.register(client);
+		assertNotNull(getSucessClientRegister);
+		
+		Client client1 = createClient();
+		Client getSucessClientRegister1 = clientDAO.register(client);
+		assertNotNull(getSucessClientRegister1);
+		
+		
+		Collection<Client> list = clientDAO.findAll();
+		assertTrue(list != null);
+		assertTrue(list.size() == 2);
+	}
+	
+	private Client createClient() {
 		Client client = new Client();
-		client.setCpf(121212121L);
+		client.setCpf(rd.nextLong());
 		client.setName("Caio Croccia");
-		client.setAge("25");
-		client.setPhone(11999999999L);
-		client.setAddress("Rua Teste");
-		client.setNumber(100);
-		client.setCity("São Paulo");
+		client.setCity("Santos");
+		client.setAddress("End");
 		client.setState("SP");
-		Boolean registered = clientDAO.register(client);
-		Assertions.assertTrue(registered);
-
-		Client clientBD = clientDAO.find(121212121L);
-		Assertions.assertNotNull(clientBD);
-		Assertions.assertEquals(client.getCpf(), clientBD.getCpf());
-		Assertions.assertEquals(client.getName(), clientBD.getName());
-
-		Boolean deleted = clientDAO.delete(client.getCpf());
-		Assertions.assertTrue(deleted);
-	}
-	
-	@Test
-	public void buscarTest() throws Exception {
-		clientDAO = new ClientDAO();
-
-		Client client = new Client();
-		client.setCpf(323232323L);
-		client.setName("Caio Croccia");
-		client.setAge("25");
-		client.setPhone(11999999999L);
-		client.setAddress("Rua Teste");
-		client.setNumber(200);
-		client.setCity("São Paulo");
-		client.setState("SP");
-		Boolean registered = clientDAO.register(client);
-		Assertions.assertTrue(registered);
-
-		Client clientBD = clientDAO.find(323232323L);
-		Assertions.assertNotNull(clientBD);
-		Assertions.assertEquals(client.getCpf(), clientBD.getCpf());
-		Assertions.assertEquals(client.getName(), clientBD.getName());
-
-		Boolean deleted = clientDAO.delete(323232323L);
-		Assertions.assertTrue(deleted);
-	}
-	
-	@Test
-	public void excluirTest() throws Exception {
-		clientDAO = new ClientDAO();
-
-		Client client = new Client();
-		client.setCpf(323232323L);
-		client.setName("Rodrigo Pires");
-		client.setAge("30");
-		client.setPhone(11888888888L);
-		client.setAddress("Rua Exemplo");
-		client.setNumber(300);
-		client.setCity("Rio de Janeiro");
-		client.setState("RJ");
-		Boolean registered = clientDAO.register(client);
-		Assertions.assertTrue(registered);
-
-		Client clientBD = clientDAO.find(323232323L);
-		Assertions.assertNotNull(clientBD);
-		Assertions.assertEquals(client.getCpf(), clientBD.getCpf());
-		Assertions.assertEquals(client.getName(), clientBD.getName());
-
-		Boolean deleted = clientDAO.delete(323232323L);
-		Assertions.assertTrue(deleted);
+		client.setNumber(10);
+		client.setPhone(1199999999L);
+		return client;
 	}
 	
 	
-	@Test
-	public void atualizarTest() throws Exception {
-		clientDAO = new ClientDAO();
-
-		Client client = new Client();
-		client.setCpf(786755765L);
-		client.setName("Caio Croccia");
-		client.setAge("25");
-		client.setPhone(11999999999L);
-		client.setAddress("Rua Teste");
-		client.setNumber(400);
-		client.setCity("São Paulo");
-		client.setState("SP");
-		Boolean registered = clientDAO.register(client);
-		Assertions.assertTrue(registered);
-
-		Client clientBD = clientDAO.find(786755765L);
-		Assertions.assertNotNull(clientBD);
-		Assertions.assertEquals(client.getCpf(), clientBD.getCpf());
-		Assertions.assertEquals(client.getName(), clientBD.getName());
-
-		Boolean updated = clientDAO.update(clientBD.getCpf());
-		Assertions.assertTrue(updated);
-
-		Boolean deleted = clientDAO.delete(786755765L);
-		Assertions.assertTrue(deleted);
-	}
+	
+	
+	
+	
 }

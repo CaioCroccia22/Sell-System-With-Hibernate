@@ -1,25 +1,28 @@
 package br.com.ccroccia.domain;
 
-import annotation.*;
+import javax.persistence.*;
+
 import br.com.ccroccia.dao.Persistent;
 
-@Table(tableName = "Product")
-public class Product implements Persistent {
+@Entity
+@Table(name = "Product")
+public class Product implements Persistent{
 
-	@KeyType("getId")
-	@Column(columnName = "cd_product", method = "setId")
+	@Id
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_product")
+	@SequenceGenerator(name = "seq_product", sequenceName = "seq_product", initialValue = 1, allocationSize = 1)
 	private Long id;
 
-	@Column(columnName = "nm_product", method = "setName")
+	@Column(name = "nm_product", length = 50, nullable = false)
 	private String name;
 
-	@Column(columnName = "ds_product", method = "setDescription")
+	@Column(name = "ds_product", length = 100, nullable = false)
 	private String description;
 
-	@Column(columnName = "vl_price", method = "setPrice")
+	@Column(name = "vl_price", nullable = false)
 	private Double price;
 
-	@Column(columnName = "qtd_product", method = "setQuantity")
+	@Column(name = "qtd_product", nullable = false)
 	private Integer quantity;
 
 	public Long getId() {

@@ -1,39 +1,51 @@
 package br.com.ccroccia.service;
 
+
+import java.util.Collection;
+
 import br.com.ccroccia.dao.IClientDao;
+
 import br.com.ccroccia.domain.Client;
+import br.com.ccroccia.service.generic.GenericService;
 
-public class ClientService implements IClientService {
+public class ClientService extends GenericService<Client, Long>  implements IClientService{
 
-	private IClientDao clientDao;
+	IClientDao clientDao;
 
 
 	public ClientService(IClientDao clientDao) {
-		this.clientDao = clientDao;
+		super(clientDao);
 	}
 
 	@Override
-	public boolean save(Client client) throws Exception {
-		clientDao.register(client);
+	public Boolean insert(Client entity) {
+		clientDao.register(entity);
 		return true;
-
 	}
 
 	@Override
-	public Client findByCPF(Long cpf) {
-		Client client = new Client();
-		client.setCpf(cpf);
+	public void delete(Long value) {
+		clientDao.delete(value);
+		
+	}
+
+	@Override
+	public Client update(Client client) {
+		Client clientUpdate = clientDao.update(client);
+		return clientUpdate;
+	}
+
+	@Override
+	public Client select(Long value) {
+		Client client = clientDao.find(value);
 		return client;
 	}
 
 	@Override
-	public void delete(Long cpf) {
-
+	public Collection<Client> selectAll() {
+		return clientDao.findAll();
 	}
 
-	@Override
-	public void update(Client client) {
 
-	}
 
 }

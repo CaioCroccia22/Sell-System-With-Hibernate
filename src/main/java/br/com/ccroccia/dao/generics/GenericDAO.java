@@ -12,161 +12,119 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.Entity;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 
 import annotation.*;
 import br.com.ccroccia.dao.Persistent;
 import br.com.ccroccia.exceptions.KeyTypeNotFoundException;
 import br.com.ccrocia.dao.generic.jdbc.ConnectionFactory;
 
-public abstract class GenericDAO<T extends Persistent, E extends Serializable> implements IGenericDAO<T,E> {
+public class GenericDAO<T extends Persistent, E extends Serializable> implements IGenericDAO<T,E> {
 
-    public abstract Class<T> getTypeClass();
     
-    protected abstract String getQueryInsert();
+	protected EntityManagerFactory entityManagerFactory;
+	
+	protected EntityManager entityManager;
+	
+	private Class<T> persistenceClass;
     
-    protected abstract String getQueryDelete();
     
-    protected abstract String getQueryUpdate();
-    
-    protected abstract void setParametersInsert(PreparedStatement stmInsert, T entity) throws SQLException;
-    
-    protected abstract void setParametersDelete(PreparedStatement stmDelete, E value) throws SQLException ;
-    
-    protected abstract void setParametersUpdate(PreparedStatement stmUpdate, E value) throws SQLException;
-    
-    protected abstract void setParametersSelect(PreparedStatement stmUpdate, E value) throws SQLException;
-    
-    public GenericDAO() {
-    	
+    public GenericDAO(Class<T> persistenceClass) {
+    	this.persistenceClass = persistenceClass;
     }
   
     /// =============REGISTER =================
     @Override
-    public Boolean register(T entity) throws KeyTypeNotFoundException, Exception {
-    	Connection connection = null;
-    	PreparedStatement stm = null;
-    	try {
-    		connection = getConnection();
-    		stm        = connection.prepareStatement(getQueryInsert(), Statement.RETURN_GENERATED_KEYS);
-    		setParametersInsert(stm, entity);
-    		if(stm.executeUpdate() > 0) {
-    			try(ResultSet rs = stm.getGeneratedKeys()){
-    				if(rs.next()) {
-    					Persistent per = (Persistent) entity;
-    					per.setId(rs.getLong(1));
-    				}
-    			}
-    			return true;
-    		}
-    	}catch(Exception e) {
-    		throw new Exception("Erro Cadastrando Objeto", e);
-    	}finally {
-    		closeConnection(connection, stm, null);
-    	}
-		return false;
+    public T register(T entity) {
+    	EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("MyPersistence");
+    	EntityManager entityManager = entityManagerFactory.createEntityManager();
+    	
+    	entityManager.getTransaction().begin();
+    	entityManager.persist(entity);
+    	entityManager.getTransaction().commit();
+    	
+    	entityManager.close();
+    	entityManagerFactory.close();
+    	
+    	return entity;
+    	
     }
  
     // ================== SELECT =======================================
-    public T find(E value) throws Exception {
-       	Connection connection = null;
-    	PreparedStatement stm = null;
-    	try {
-    		connection = getConnection();
-    		stm		   = connection.prepareStatement("SELECT * FROM " 
-    		+ getTableName() + " WHERE " + getColumnName().columnName() + " = ? ");
-    		setParametersSelect(stm, value);
-    		ResultSet rs = stm.executeQuery();
-    		if(rs.next()) {
-    			T entity = getTypeClass().getConstructor().newInstance();
-    			Field[] fields = entity.getClass().getDeclaredFields();
-    			for(Field f:fields) {
-    				Column column = f.getDeclaredAnnotation(Column.class);
-    				String columnName = column.columnName();
-    				String setMethod  = column.method();
-    				Class<?> type = f.getType();
-    				try {
-    					//The method getMethod allow us to find methods with String, that
-    					// represents method name and type parameters
-    					Method method = entity.getClass().getMethod(setMethod, type);
-    					setValueByType(entity, method, type, rs, columnName);
-    				} catch(NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-    			        throw new Exception("ERRO CONSULTANDO OBJETO ", e);
-    			    }
-    				
-    				
-    			}
-    			return entity;
-    		}
-    	} catch(Exception e) {
-    		throw new Exception("Erro ao se conectar com o banco ", e);
-    	} finally {
-			closeConnection(connection, stm, null);
-		}
-		return null;
+    public T find(E value){
+    	EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("MyPersistence");
+    	EntityManager entityManager = entityManagerFactory.createEntityManager();
+    	
+    	entityManager.getTransaction().begin();
+    	
+    	T entity = entityManager.find(this.persistenceClass, value);
+    	entityManager.getTransaction().commit();
+    	
+    	entityManager.close();
+    	entityManagerFactory.close();
+    	
+    	return entity;
     	
     }
  //=================== DELETE =========================================================   
-    public Boolean delete(E value) throws Exception {
-    	Connection connection = null;
-    	PreparedStatement stm = null;
-    	try {
-    		connection = getConnection();
-    		stm = connection.prepareStatement(getQueryDelete() + " WHERE " 
-    		+ getColumnName().columnName() + " = " + " ? ");
-    		setParametersDelete(stm, value);
-    		if(stm.executeUpdate() > 0) {
-    			return true;
-    		}
-    		return false;
-    	} catch(SQLException e) {
-			throw new Exception("Erro ao excluir", e);
-		} finally {
-			closeConnection(connection, stm, null);
-		}
+    public void delete(E value) {
+    	EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("MyPersistence");
+    	EntityManager entityManager = entityManagerFactory.createEntityManager();
+    	
+    	entityManager.getTransaction().begin();
+    	
+    	T entity = entityManager.find(this.persistenceClass, value);
+    	
+    	if (entity != null) {
+    		entityManager.remove(entity);
+    	}
+    	
+    	entityManager.getTransaction().commit();
+    	
+    	entityManager.close();
+    	entityManagerFactory.close();
+    	
+    	
     }
     
   // ================= UPDATE ========================================================== 
-    public Boolean update(E value) throws Exception {
-    	Connection connection = null;
-    	PreparedStatement stm = null;
-    	try {
-    		connection = getConnection();
-    		stm = connection.prepareStatement(getQueryUpdate() + " WHERE " 
-    		+ getColumnName().columnName() + " = " + " ? ");
-    		setParametersUpdate(stm, value);
-    		if(stm.executeUpdate() > 0) {
-    			return true;
-    		}
-    		return false;
-    	} catch(SQLException e) {
-			throw new Exception("Erro ao atualizar", e);
-		} finally {
-			closeConnection(connection, stm, null);
-		}
+    public T update(T entity) {
+    	EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("MyPersistence");
+    	EntityManager entityManager = entityManagerFactory.createEntityManager();
+    	
+    	entityManager.getTransaction().begin();
+    	
+    	entity = entityManager.merge(entity);
+    	
+
+    	entityManager.getTransaction().commit();
+    	
+    	entityManager.close();
+    	entityManagerFactory.close();
+    	
+    	return entity;
+    	
     }
     
   // ========================== SELECT ALL =============================================
     
     
-    public List<T> findAll() throws Exception {
-       	Connection connection 	= null;
-    	PreparedStatement stm	= null;
-    	List<T> list 			= new ArrayList<T>();
-    	try {
-    		connection = getConnection();
-    		stm		   = connection.prepareStatement("SELECT * FROM " + getTableName());
-    		ResultSet rs = stm.executeQuery();
-    		while(rs.next()) {
-    			T entity = getTypeClass().getConstructor().newInstance();
-    			list.add(entity);
-    			
-    		}
-    		return list;
-    	} catch(Exception e) {
-    		throw new Exception("Erro ao se conectar com o banco ", e);
-    	} finally {
-			closeConnection(connection, stm, null);
-		}
+    public List<T> findAll(){
+    	EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("myPersistenceUnit");
+		EntityManager entityManager = entityManagerFactory.createEntityManager();
+		
+		entityManager.getTransaction().begin();
+		List<T> list =
+				entityManager.createQuery("SELECT * FROM PRODUCT", this.persistenceClass).getResultList();
+		entityManager.getTransaction().commit();
+		 
+		entityManager.close();
+		entityManagerFactory.close();
+		
+		return list;
     }
     
     
@@ -175,70 +133,7 @@ public abstract class GenericDAO<T extends Persistent, E extends Serializable> i
     
     
   /// ====================== OTHER METHODS   ===================================================
-    private void setValueByType(T entity, Method method, Class<?> fieldClass, ResultSet rs, String fieldName)
-            throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, SQLException, Exception {
 
-        if (fieldClass.equals(Integer.class)) {
-            Integer val = rs.getInt(fieldName);
-            method.invoke(entity, val);
-        } else if (fieldClass.equals(Long.class)) {
-            Long val = rs.getLong(fieldName);
-            method.invoke(entity, val);
-        } else if (fieldClass.equals(Double.class)) {
-            Double val = rs.getDouble(fieldName);
-            method.invoke(entity, val);
-        } else if (fieldClass.equals(Short.class)) {
-            Short val = rs.getShort(fieldName);
-            method.invoke(entity, val);
-        } else if (fieldClass.equals(BigDecimal.class)) {
-            BigDecimal val = rs.getBigDecimal(fieldName);
-            method.invoke(entity, val);
-        } else if (fieldClass.equals(String.class)) {
-            String val = rs.getString(fieldName);
-            method.invoke(entity, val);
-        } else {
-            throw new Exception("UNKNOWN CLASS TYPE: " + fieldClass);
-        }
-    }
 
-    //Get the column that has annotation of pk
-	private Column getColumnName() {
-		Class<T> entity = getTypeClass();
-		Field[] fields = entity.getDeclaredFields();
-		for(Field f: fields) {
-			if(f.getAnnotation(KeyType.class) != null) {
-				Column column = f.getAnnotation(Column.class);	
-				return column;
-			}
-		}
-		return null;
-	}
 
-	private String getTableName() {
-		Class<T> entity = getTypeClass();
-		Table table = entity.getAnnotation(Table.class);
-		return table.tableName();
-	}
-
-	private static Connection getConnection() throws SQLException {
-		return ConnectionFactory.getConnection();
-	}
-	
-	private void closeConnection(Connection connection, PreparedStatement stm, ResultSet rs) throws SQLException {
-		try {
-			if(rs != null && !rs.isClosed()) {
-				rs.close();			
-			}
-			if(stm != null && !stm.isClosed()) {
-				stm.close();			
-			}
-			if(connection != null && !connection.isClosed()) {
-				connection.close();			
-			}
-		}catch(SQLException e) {
-			e.printStackTrace();
-		}
-		
-		
-	}
 }
