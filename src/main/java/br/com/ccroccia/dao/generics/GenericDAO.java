@@ -30,19 +30,22 @@ public class GenericDAO<T extends Persistent, E extends Serializable> implements
 	protected EntityManager entityManager;
 	
 	private Class<T> persistenceClass;
+	
+	private static final String PERSISTENCE_UNIT_NAME = null;
+	
+	private String persistenceUnitName;
     
     
-    public GenericDAO(Class<T> persistenceClass) {
+    public GenericDAO(Class<T> persistenceClass, String persistenceUnitName) {
     	this.persistenceClass = persistenceClass;
+    	this.persistenceUnitName = persistenceUnitName;
     }
   
     /// =============REGISTER =================
     @Override
     public T register(T entity) {
-    	EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("MyPersistence");
-    	EntityManager entityManager = entityManagerFactory.createEntityManager();
+    	openConnection() ;
     	
-    	entityManager.getTransaction().begin();
     	entityManager.persist(entity);
     	entityManager.getTransaction().commit();
     	
@@ -55,10 +58,7 @@ public class GenericDAO<T extends Persistent, E extends Serializable> implements
  
     // ================== SELECT =======================================
     public T find(E value){
-    	EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("MyPersistence");
-    	EntityManager entityManager = entityManagerFactory.createEntityManager();
-    	
-    	entityManager.getTransaction().begin();
+    	openConnection() ;
     	
     	T entity = entityManager.find(this.persistenceClass, value);
     	entityManager.getTransaction().commit();
@@ -71,10 +71,7 @@ public class GenericDAO<T extends Persistent, E extends Serializable> implements
     }
  //=================== DELETE =========================================================   
     public void delete(E value) {
-    	EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("MyPersistence");
-    	EntityManager entityManager = entityManagerFactory.createEntityManager();
-    	
-    	entityManager.getTransaction().begin();
+    	openConnection() ;
     	
     	T entity = entityManager.find(this.persistenceClass, value);
     	
@@ -92,10 +89,7 @@ public class GenericDAO<T extends Persistent, E extends Serializable> implements
     
   // ================= UPDATE ========================================================== 
     public T update(T entity) {
-    	EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("MyPersistence");
-    	EntityManager entityManager = entityManagerFactory.createEntityManager();
-    	
-    	entityManager.getTransaction().begin();
+    	openConnection() ;
     	
     	entity = entityManager.merge(entity);
     	
@@ -113,10 +107,7 @@ public class GenericDAO<T extends Persistent, E extends Serializable> implements
     
     
     public List<T> findAll(){
-    	EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("MyPersistence");
-		EntityManager entityManager = entityManagerFactory.createEntityManager();
-		
-		entityManager.getTransaction().begin();
+    	openConnection() ;
 		List<T> list =
 				entityManager.createQuery("SELECT L FROM " + this.persistenceClass.getSimpleName(), this.persistenceClass).getResultList();
 		entityManager.getTransaction().commit();
@@ -134,6 +125,22 @@ public class GenericDAO<T extends Persistent, E extends Serializable> implements
     
   /// ====================== OTHER METHODS   ===================================================
 
-
+	protected void openConnection() {
+		entityManagerFactory = 
+				Persistence.createEntityManagerFactory(getPersistenceUnitName());
+		entityManager = entityManagerFactory.createEntityManager();
+		entityManager.getTransaction().begin();
+	}
+	
+	private String getPersistenceUnitName() {
+		if (persistenceUnitName != null 
+				&& !"".equals(persistenceUnitName)) {
+			return persistenceUnitName;
+		} else {
+			return PERSISTENCE_UNIT_NAME;
+		}
+	}
+	
+	
 
 }

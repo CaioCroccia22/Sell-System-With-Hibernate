@@ -13,19 +13,26 @@ import java.util.Random;
 import org.junit.After;
 import org.junit.jupiter.api.*;
 
-import br.com.ccroccia.dao.ClientDAO;
+
+import br.com.ccroccia.dao.ClientDAODB1;
+import br.com.ccroccia.dao.ClientDAODB2;
 import br.com.ccroccia.dao.IClientDao;
+import br.com.ccroccia.dao.generics.GenericDB2DAO;
 import br.com.ccroccia.domain.Client;
 
 public class ClientTest {
 
 	
-	private IClientDao clientDAO;
+	private IClientDao<Client> clientDAO;
+	
+	private IClientDao<Client> clientDAODB2;
+	
 	
 	private Random rd;
 	
 	public ClientTest() {
-		this.clientDAO = new ClientDAO();
+		this.clientDAO = new ClientDAODB1();
+		this.clientDAODB2 = new ClientDAODB2();
 		rd = new Random();
 	}
 	
@@ -72,7 +79,7 @@ public class ClientTest {
 	public void removeClient() {
 		Client client = createClient();
 		
-		/// Aqui vai ter que trocar o retorno do metodo para um tipo cliente
+
 		Client getSucessClientRegister = clientDAO.register(client);
 		assertNotNull(getSucessClientRegister);
 		
@@ -89,7 +96,7 @@ public class ClientTest {
 	public void updateClient() {
 		Client client = createClient();
 		
-		/// Aqui vai ter que trocar o retorno do metodo para um tipo cliente
+	
 		Client getSucessClientRegister = clientDAO.register(client);
 		assertNotNull(getSucessClientRegister);
 		
@@ -125,6 +132,89 @@ public class ClientTest {
 		assertTrue(list.size() == 2);
 	}
 	
+	// =================== DB2 Tests ===================
+
+	@Test
+	public void FindClientDB2() throws Exception{
+		Client client = createClient();
+		clientDAODB2.register(client);
+
+		Client getSucessClientRegister = clientDAODB2.find(client.getId());
+		assertNotNull(getSucessClientRegister);
+	}
+
+	@Test
+	public void saveClientDB2() throws Exception{
+		Client client = createClient();
+
+
+		Client getSucessClientRegister = clientDAODB2.register(client);
+		assertNotNull(getSucessClientRegister);
+
+		Client getClient = clientDAODB2.find(client.getId());
+		assertNotNull(getClient);
+
+		clientDAODB2.delete(getSucessClientRegister.getId());
+
+
+
+	}
+
+	@Test
+	public void removeClientDB2() {
+		Client client = createClient();
+
+		Client getSucessClientRegister = clientDAODB2.register(client);
+		assertNotNull(getSucessClientRegister);
+
+		Client getClient = clientDAODB2.find(client.getId());
+		assertNotNull(getClient);
+
+		clientDAODB2.delete(getSucessClientRegister.getId());
+
+		getClient = clientDAODB2.find(client.getId());
+		assertNull(getClient);
+	}
+
+	@Test
+	public void updateClientDB2() {
+		Client client = createClient();
+
+		Client getSucessClientRegister = clientDAODB2.register(client);
+		assertNotNull(getSucessClientRegister);
+
+		Client getClient = clientDAODB2.find(client.getId());
+		assertNotNull(getClient);
+
+		getClient.setName("Fulano 123");
+		clientDAODB2.update(getClient);
+
+		Client updateClient = clientDAODB2.find(getClient.getId());
+		assertNotNull(updateClient);
+		assertEquals("Fulano 123", updateClient.getName());
+
+
+		clientDAODB2.delete(client.getId());
+
+	}
+
+
+	public void getAllClientsDB2() {
+		Client client = createClient();
+
+		Client getSucessClientRegister = clientDAODB2.register(client);
+		assertNotNull(getSucessClientRegister);
+
+		Client client1 = createClient();
+		Client getSucessClientRegister1 = clientDAODB2.register(client1);
+		assertNotNull(getSucessClientRegister1);
+
+
+		Collection<Client> list = clientDAODB2.findAll();
+		assertTrue(list != null);
+		assertTrue(list.size() == 2);
+	}
+
 	private Client createClient() {
 		Client client = new Client();
 		client.setCpf(rd.nextLong());
@@ -137,10 +227,10 @@ public class ClientTest {
 		client.setPhone(1199999999L);
 		return client;
 	}
-	
-	
-	
-	
-	
-	
+
+
+
+
+
+
 }

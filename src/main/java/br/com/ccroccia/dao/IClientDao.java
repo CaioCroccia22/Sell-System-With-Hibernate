@@ -1,10 +1,10 @@
 package br.com.ccroccia.dao;
 
 
-import br.com.ccroccia.dao.generics.IGenericDAO;
-import br.com.ccroccia.domain.Client;
 
-public interface IClientDao extends IGenericDAO<Client, Long>{
+import br.com.ccroccia.dao.generics.IGenericDAO;
+
+public interface IClientDao<T extends Persistent> extends IGenericDAO<T, Long>{
 
 
 }
